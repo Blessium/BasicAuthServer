@@ -5,12 +5,14 @@ import io.exsuslabs.AuthorizationServer.domain.UserDomain;
 import io.exsuslabs.AuthorizationServer.jwt.JWTService;
 import io.exsuslabs.AuthorizationServer.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 
+@Service
 public class AuthorizationService {
     @Autowired
     UserRepository userRepository;
@@ -20,6 +22,7 @@ public class AuthorizationService {
         return decodedJWT.isPresent();
     }
 
+
     public boolean checkTokenType(String tokenRequest) {
         return tokenRequest.split(" ")[0].equals("Bearer");
     }
@@ -28,6 +31,11 @@ public class AuthorizationService {
         return tokenRequest.split(" ")[1];
     }
 
+    public Optional<String> checkTokenValidity(String tokenRequest) {
+        if (!validateToken(getTokenString(tokenRequest)) || !checkTokenType(tokenRequest))
+            return Optional.of("you should be logged");
+        return Optional.empty();
+    }
     public Optional<String> checkPermission(String tokenRequest, int id) {
         String token = getTokenString(tokenRequest);
 

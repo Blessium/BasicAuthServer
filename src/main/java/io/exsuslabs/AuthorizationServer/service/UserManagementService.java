@@ -1,13 +1,16 @@
 package io.exsuslabs.AuthorizationServer.service;
 
+import ch.qos.logback.classic.pattern.ClassNameOnlyAbbreviator;
 import com.google.common.hash.Hashing;
 import io.exsuslabs.AuthorizationServer.domain.UserDomain;
 import io.exsuslabs.AuthorizationServer.repository.UserRepository;
 import io.exsuslabs.AuthorizationServer.requests.FullUserRequest;
+import io.exsuslabs.AuthorizationServer.utils.Convertions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -29,6 +32,10 @@ public class UserManagementService {
         return Optional.empty();
     }
 
+    public Map<String, String> getUserInfo(long id) {
+        Optional<UserDomain> userDomain = repository.findById(id);
+        return userDomain.map(Convertions::convertUserToMap).orElse(null);
+    }
 
 
 }

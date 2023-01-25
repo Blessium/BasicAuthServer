@@ -1,12 +1,11 @@
 package io.exsuslabs.AuthorizationServer.controller;
 
 import io.exsuslabs.AuthorizationServer.requests.FullUserRequest;
-import io.exsuslabs.AuthorizationServer.service.AuthenticationService;
 import io.exsuslabs.AuthorizationServer.service.AuthorizationService;
 import io.exsuslabs.AuthorizationServer.service.UserManagementService;
+import io.exsuslabs.AuthorizationServer.utils.ResponseBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.ComponentScans;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -34,21 +33,14 @@ public class UserController {
             produces = "application/json"
     )
     public ResponseEntity<Map<String, String>> createUser(@Validated @RequestBody FullUserRequest fullUserRequest, BindingResult bindingResult) {
-        HashMap<String, String> result = new HashMap<>();
         if (bindingResult.hasErrors()) {
-                result.put("message", "binding error");
-                result.put("status", "error");
-                return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
+                return ResponseBuilder.create().errorMessage("Binding Error").badRequestStatus().build();
         }
         Optional<String> error = userManagementService.createUser(fullUserRequest);
         if (error.isPresent()) {
-            result.put("message", error.get());
-            result.put("status", "error");
-            return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
+            return ResponseBuilder.create().errorMessage(error.get()).badRequestStatus().build();
         } else {
-            result.put("message", "user created successfully");
-            result.put("status", "success");
-            return new ResponseEntity<>(result, HttpStatus.CREATED);
+            return ResponseBuilder.create().message("user created successfully").createdStatus().build();
         }
     }
 
@@ -59,13 +51,13 @@ public class UserController {
     public ResponseEntity<Map<String, String>> getUserInfo(@Nullable @RequestHeader (name="Authorization") String token, @PathVariable("id") int id) {
         Map<String, String> result = new HashMap<>();
         if (Objects.isNull(token)){
-            result.put("message", "not authorized");
-            result.put("status", "error");
-            return new ResponseEntity<>(result, HttpStatus.FORBIDDEN);
+            return ResponseBuilder.create().errorMessage("you're not authorized").forbiddenStatus().build();
         }
 
         Optional<String> error = authorizationService.checkPermission(token, id);
-
-        return null;
+        if (error.isPresent()) {
+            return ResponseBuilder.create().errorMessage(error.get()).forbiddenStatus().build();
+        }
+        return ResponseBuilder.create().userInfo(userManagementService.getUserInfo(id)).okStatus().build();
     }
 }

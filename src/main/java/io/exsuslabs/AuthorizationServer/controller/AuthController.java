@@ -2,26 +2,31 @@ package io.exsuslabs.AuthorizationServer.controller;
 
 import io.exsuslabs.AuthorizationServer.requests.CredentialUserRequest;
 import io.exsuslabs.AuthorizationServer.service.AuthenticationService;
+import io.exsuslabs.AuthorizationServer.service.AuthorizationService;
+import io.exsuslabs.AuthorizationServer.utils.ResponseBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @RestController
-@ComponentScan(basePackageClasses = AuthenticationService.class)
+@ComponentScan(basePackageClasses = {AuthenticationService.class, AuthorizationService.class})
 public class AuthController {
 
     @Autowired
     AuthenticationService authenticationService;
+
+    @Autowired
+    AuthorizationService authorizationService;
 
     @PostMapping(
             value = "/login",
@@ -29,20 +34,36 @@ public class AuthController {
             produces = "application/json"
     )
     public ResponseEntity<Map<String, String>> login(@Validated @RequestBody CredentialUserRequest credentialUserRequest, BindingResult bindingResult) {
-        Map<String, String> result = new HashMap<>();
         if (bindingResult.hasErrors()) {
-            result.put("message", "binding error");
-            result.put("status", "error");
-            return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
+            return ResponseBuilder.create().errorMessage("binding error").badRequestStatus().build();
         }
         Optional<String> jwtToken = authenticationService.validateCredentials(credentialUserRequest);
         if (jwtToken.isEmpty()) {
-            result.put("message", "invalid user ID or password");
-            result.put("status", "failed");
-            return new ResponseEntity<>(result, HttpStatus.FORBIDDEN);
+            return ResponseBuilder.create().errorMessage("invalid user ID or password").forbiddenStatus().build();
         }
-        result.put("access_token", jwtToken.get());
-        result.put("status", "success");
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        return ResponseBuilder.create().token(jwtToken.get()).okStatus().build();
     }
+
+    @GetMapping(
+            value = "/auth",
+            produces = "application/json"
+    )
+    public ResponseEntity<Map<String, String>> oAuthentication(
+            @Nullable @RequestHeader (name="Authorization") String token,
+            @RequestParam String clientID, @RequestParam String redirect_uri)
+    {
+        if (Objects.isNull(token)){
+            return ResponseBuilder.create().errorMessage("not authorized").forbiddenStatus().build();
+        }
+
+        Optional<String> error = authorizationService.checkTokenValidity(token);
+        if (error.isPresent()) {
+            return ResponseBuilder.create().message(error.get()).forbiddenStatus().build();
+        }
+
+
+
+        return null;
+    }
+
 }
