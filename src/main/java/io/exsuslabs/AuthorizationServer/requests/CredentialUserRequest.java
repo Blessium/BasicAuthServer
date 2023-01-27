@@ -1,7 +1,10 @@
 package io.exsuslabs.AuthorizationServer.requests;
 
+import org.springframework.stereotype.Component;
+
 import java.util.Objects;
 
+@Component
 public class CredentialUserRequest {
     private String username;
     private String password;

@@ -17,13 +17,13 @@ public class AuthorizationService {
     @Autowired
     UserRepository userRepository;
 
-    public boolean validateToken(String token) {
+    private boolean validateToken(String token) {
         Optional<DecodedJWT> decodedJWT = JWTService.validateJWT(token);
         return decodedJWT.isPresent();
     }
 
 
-    public boolean checkTokenType(String tokenRequest) {
+    private boolean checkTokenType(String tokenRequest) {
         return tokenRequest.split(" ")[0].equals("Bearer");
     }
 
@@ -33,7 +33,7 @@ public class AuthorizationService {
 
     public Optional<String> checkTokenValidity(String tokenRequest) {
         if (!validateToken(getTokenString(tokenRequest)) || !checkTokenType(tokenRequest))
-            return Optional.of("you should be logged");
+            return Optional.of("you need to be authenticated");
         return Optional.empty();
     }
     public Optional<String> checkPermission(String tokenRequest, int id) {

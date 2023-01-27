@@ -6,17 +6,17 @@ import io.exsuslabs.AuthorizationServer.service.AuthorizationService;
 import io.exsuslabs.AuthorizationServer.utils.ResponseBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Nullable;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+
 
 @RestController
 @ComponentScan(basePackageClasses = {AuthenticationService.class, AuthorizationService.class})
@@ -30,8 +30,8 @@ public class AuthController {
 
     @PostMapping(
             value = "/login",
-            consumes = "application/json",
-            produces = "application/json"
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<Map<String, String>> login(@Validated @RequestBody CredentialUserRequest credentialUserRequest, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
