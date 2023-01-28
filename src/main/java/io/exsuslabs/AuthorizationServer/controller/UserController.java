@@ -1,5 +1,6 @@
 package io.exsuslabs.AuthorizationServer.controller;
 
+import io.exsuslabs.AuthorizationServer.jwt.JWTService;
 import io.exsuslabs.AuthorizationServer.requests.FullUserRequest;
 import io.exsuslabs.AuthorizationServer.service.AuthorizationService;
 import io.exsuslabs.AuthorizationServer.service.UserManagementService;
@@ -45,19 +46,23 @@ public class UserController {
     }
 
     @GetMapping(
-            value = "/users/{id}",
+            value = "/users/me",
             produces = "application/json"
     )
-    public ResponseEntity<Map<String, String>> getUserInfo(@Nullable @RequestHeader (name="Authorization") String token, @PathVariable("id") int id) {
+    public ResponseEntity<Map<String, String>> getUserInfo(@Nullable @RequestHeader (name="Authorization") String token) {
         Map<String, String> result = new HashMap<>();
         if (Objects.isNull(token)){
             return ResponseBuilder.create().errorMessage("you're not authorized").forbiddenStatus().build();
         }
 
-        Optional<String> error = authorizationService.checkPermission(token, id);
+        Optional<String> error = authorizationService.checkTokenValidity(token);
         if (error.isPresent()) {
             return ResponseBuilder.create().errorMessage(error.get()).forbiddenStatus().build();
         }
-        return ResponseBuilder.create().userInfo(userManagementService.getUserInfo(id)).okStatus().build();
+
+        return ResponseBuilder.create()
+                .userInfo(userManagementService.getUserInfo(JWTService.extractUsername(authorizationService.getTokenString(token))))
+                .okStatus()
+                .build();
     }
 }

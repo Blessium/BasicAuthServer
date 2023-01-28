@@ -3,6 +3,8 @@ package io.exsuslabs.AuthorizationServer.controller;
 import io.exsuslabs.AuthorizationServer.requests.CredentialUserRequest;
 import io.exsuslabs.AuthorizationServer.service.AuthenticationService;
 import io.exsuslabs.AuthorizationServer.service.AuthorizationService;
+import io.exsuslabs.AuthorizationServer.service.DeveloperService;
+import io.exsuslabs.AuthorizationServer.service.OAuthService;
 import io.exsuslabs.AuthorizationServer.utils.ResponseBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
@@ -16,10 +18,11 @@ import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 
 @RestController
-@ComponentScan(basePackageClasses = {AuthenticationService.class, AuthorizationService.class})
+@ComponentScan(basePackageClasses = {AuthenticationService.class, AuthorizationService.class, DeveloperService.class, OAuthService.class})
 public class AuthController {
 
     @Autowired
@@ -27,6 +30,12 @@ public class AuthController {
 
     @Autowired
     AuthorizationService authorizationService;
+
+    @Autowired
+    DeveloperService developerService;
+
+    @Autowired
+    OAuthService oAuthService;
 
     @PostMapping(
             value = "/login",
@@ -45,25 +54,45 @@ public class AuthController {
     }
 
     @GetMapping(
-            value = "/auth",
+            value = "/oauth2",
             produces = "application/json"
     )
     public ResponseEntity<Map<String, String>> oAuthentication(
             @Nullable @RequestHeader (name="Authorization") String token,
-            @RequestParam String clientID, @RequestParam String redirect_uri)
+            @RequestParam("client_id") String clientID, @RequestParam("redirect_uri") String redirect_uri)
     {
         if (Objects.isNull(token)){
             return ResponseBuilder.create().errorMessage("not authorized").forbiddenStatus().build();
         }
 
-        Optional<String> error = authorizationService.checkTokenValidity(token);
+        Optional<String> error;
+        error = authorizationService.checkTokenValidity(token);
         if (error.isPresent()) {
-            return ResponseBuilder.create().message(error.get()).forbiddenStatus().build();
+            return ResponseBuilder.create().errorMessage(error.get()).forbiddenStatus().build();
         }
 
+        error = developerService.verifyUrls(clientID, redirect_uri, token);
 
+        if (error.isPresent()) {
+            return ResponseBuilder.create().errorMessage(error.get()).forbiddenStatus().build();
+        }
 
-        return null;
+        Optional<UUID> access_token = oAuthService.generateRequest(token, clientID);
+        if (access_token.isEmpty()) {
+            return ResponseBuilder
+                    .create()
+                    .errorMessage("could not generate the access token")
+                    .forbiddenStatus()
+                    .build();
+        }
+
+        return ResponseBuilder
+                .create()
+                .issuedAt()
+                .tokenType("Bearer")
+                .accessToken(access_token.get().toString())
+                .okStatus()
+                .build();
     }
 
 }

@@ -26,7 +26,7 @@ public class DeveloperDomain implements Serializable {
     private List<String> valid_urls;
 
     @OneToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "username")
     private UserDomain user;
 
     public DeveloperDomain() {}

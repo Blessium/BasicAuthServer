@@ -8,9 +8,6 @@ import java.io.Serializable;
 @Entity
 public class UserDomain implements Serializable {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Long id;
     @Column(name = "username")
     private String username;
     @Column(name = "email")
@@ -22,15 +19,6 @@ public class UserDomain implements Serializable {
     private DeveloperDomain developer;
 
     public UserDomain() {}
-
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
 
     public String getUsername() {
         return username;

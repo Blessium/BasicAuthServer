@@ -20,7 +20,7 @@ public class UserManagementService {
     private UserRepository repository;
 
     public Optional<String> createUser(FullUserRequest fullUserRequest) {
-        Optional<UserDomain> byUsername = repository.findByUsername(fullUserRequest.getUsername());
+        Optional<UserDomain> byUsername = repository.findById(fullUserRequest.getUsername());
         if (byUsername.isPresent()) {
             return Optional.of("User is already registered. Use a different username");
         }
@@ -32,8 +32,8 @@ public class UserManagementService {
         return Optional.empty();
     }
 
-    public Map<String, String> getUserInfo(long id) {
-        Optional<UserDomain> userDomain = repository.findById(id);
+    public Map<String, String> getUserInfo(String username) {
+        Optional<UserDomain> userDomain = repository.findById(username);
         return userDomain.map(Convertions::convertUserToMap).orElse(null);
     }
 

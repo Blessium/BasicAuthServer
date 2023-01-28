@@ -12,7 +12,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Nullable;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -66,7 +65,6 @@ public class DeveloperController {
             produces = "application/json"
     )
     public ResponseEntity<Map<String, String>> updateDevInfo(
-
             @Validated @RequestBody DeveloperUpdateRequest developerUpdateRequest,
             @RequestHeader(name="Authorization") String token,
             BindingResult bindingResult
@@ -90,8 +88,6 @@ public class DeveloperController {
                     .build();
         }
         error = developerService.updateDevInfo(developerUpdateRequest, token);
-
-
 
         return ResponseBuilder
                 .create()

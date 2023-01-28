@@ -3,6 +3,7 @@ package io.exsuslabs.AuthorizationServer.utils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -62,6 +63,26 @@ public class ResponseBuilder {
         status = HttpStatus.CREATED;
         map.put("code", "201");
         map.put("status", "created");
+        return this;
+    }
+
+    public ResponseBuilder customMessage(String type, String message) {
+        map.put(type, message);
+        return this;
+    }
+
+    public ResponseBuilder accessToken(String token) {
+        map.put("access_token", token);
+        return this;
+    }
+
+    public ResponseBuilder tokenType(String token_type) {
+        map.put("token_type", token_type);
+        return this;
+    }
+
+    public ResponseBuilder issuedAt() {
+        map.put("issued_at", Instant.now().toString());
         return this;
     }
 

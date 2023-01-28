@@ -36,14 +36,14 @@ public class AuthorizationService {
             return Optional.of("you need to be authenticated");
         return Optional.empty();
     }
-    public Optional<String> checkPermission(String tokenRequest, int id) {
+    public Optional<String> checkPermission(String tokenRequest) {
         String token = getTokenString(tokenRequest);
 
         if (!validateToken(token) || !checkTokenType(tokenRequest)){
             return Optional.of("token is not valid");
         }
-        Optional<UserDomain> user = userRepository.findByUsername(JWTService.extractUsername(token));
-        if (user.isEmpty() || user.get().getId() != id) {
+        Optional<UserDomain> user = userRepository.findById(JWTService.extractUsername(token));
+        if (user.isEmpty()) {
             return Optional.of("you're not allowed to access this resource");
         }
 

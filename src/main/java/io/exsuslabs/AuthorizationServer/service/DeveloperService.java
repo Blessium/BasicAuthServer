@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class DeveloperService {
@@ -23,7 +24,7 @@ public class DeveloperService {
 
     public Optional<String> enableDevAccount(String token) {
         String username = JWTService.extractUsername(token.split(" ")[1]);
-        Optional<UserDomain> user = userRepository.findByUsername(username);
+        Optional<UserDomain> user = userRepository.findById(username);
         if (user.isEmpty()) {
             return Optional.of("could not create dev account");
         }
@@ -35,11 +36,11 @@ public class DeveloperService {
 
     public Optional<String> updateDevInfo(DeveloperUpdateRequest developerUpdateRequest, String token) {
         String username = JWTService.extractUsername(token.split(" ")[1]);
-        Optional<UserDomain> user = userRepository.findByUsername(username);
+        Optional<UserDomain> user = userRepository.findById(username);
         if (user.isEmpty()) {
             return Optional.of("could not update dev account");
         }
-        Optional<DeveloperDomain> developer = developerRepository.findByUserId(user.get().getId());
+        Optional<DeveloperDomain> developer = developerRepository.findByUser(userRepository.findById(username).get());
         if (developer.isEmpty()) {
             return Optional.of("could not retrieve you're dev account");
         }
@@ -47,6 +48,27 @@ public class DeveloperService {
         dev.setPassword(developerUpdateRequest.getPassword());
         dev.setValid_urls(List.of(developerUpdateRequest.getValid_urls()));
         developerRepository.save(developer.get());
+        return Optional.empty();
+    }
+
+    public Optional<String> verifyUrls(String client_ID, String url, String token) {
+        String username = JWTService.extractUsername(token.split(" ")[1]);
+        Optional<UserDomain> user = userRepository.findById(username);
+        if (user.isEmpty()) {
+            return Optional.of("could not retrieve user account");
+        }
+        UUID clientId = UUID.fromString(client_ID);
+        Optional<DeveloperDomain> developer = developerRepository.findById(clientId);
+        if (developer.isEmpty()) {
+            return Optional.of("could not retrieve client information");
+        }
+
+        DeveloperDomain dev = developer.get();
+        boolean containsUrl = dev.getValid_urls().contains(url);
+        if (!containsUrl) {
+            return Optional.of("the redirect url is invalid");
+        }
+
         return Optional.empty();
     }
 }

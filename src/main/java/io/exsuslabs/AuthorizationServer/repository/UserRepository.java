@@ -9,9 +9,8 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends CrudRepository<UserDomain, Long> {
+public interface UserRepository extends CrudRepository<UserDomain, String> {
     Optional<UserDomain> findByEmail(String email);
-    Optional<UserDomain> findByUsername(String username);
     @Query(value = "SELECT * from users WHERE username=:username AND password=:password", nativeQuery = true)
     Optional<UserDomain> lookupCredentials(@Param("username") String username, @Param("password") String hashedPassword);
 }
