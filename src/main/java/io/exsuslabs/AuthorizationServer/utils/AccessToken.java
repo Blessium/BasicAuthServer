@@ -1,30 +1,51 @@
 package io.exsuslabs.AuthorizationServer.utils;
 
+import java.time.Instant;
+import java.time.temporal.TemporalAmount;
 import java.util.UUID;
 
 public class AccessToken {
-    private UUID value;
-    private Long user_id;
+    private UUID clientId;
+    private Instant issued_at;
+    private Instant expires_at;
+    private String username;
 
-    public AccessToken() {}
-    public AccessToken(UUID token, Long user_id) {
-        value = token;
-        this.user_id = user_id;
+    public AccessToken(UUID clientId, TemporalAmount timeToExpire, String username) {
+        this.clientId = clientId;
+        this.issued_at = Instant.now();
+        this.expires_at = issued_at.plus(timeToExpire);
+        this.username = username;
     }
 
-    public UUID getValue() {
-        return value;
+    public UUID getClientId() {
+        return clientId;
     }
 
-    public void setValue(UUID value) {
-        this.value = value;
+    public void setClientId(UUID clientId) {
+        this.clientId = clientId;
     }
 
-    public Long getUser_id() {
-        return user_id;
+    public Instant getExpires_at() {
+        return expires_at;
     }
 
-    public void setUser_id(Long user_id) {
-        this.user_id = user_id;
+    public void setExpires_at(Instant expires_at) {
+        this.expires_at = expires_at;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public boolean isExpired() {
+        return issued_at.isAfter(expires_at);
+    }
+
+    public boolean isEqual(String username, UUID clientId) {
+        return (this.username.equals(username) && this.clientId.equals(clientId) );
     }
 }

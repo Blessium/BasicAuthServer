@@ -1,5 +1,6 @@
 package io.exsuslabs.AuthorizationServer.controller;
 
+import com.sun.net.httpserver.HttpsServer;
 import io.exsuslabs.AuthorizationServer.requests.CredentialUserRequest;
 import io.exsuslabs.AuthorizationServer.service.AuthenticationService;
 import io.exsuslabs.AuthorizationServer.service.AuthorizationService;
@@ -8,6 +9,8 @@ import io.exsuslabs.AuthorizationServer.service.OAuthService;
 import io.exsuslabs.AuthorizationServer.utils.ResponseBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -15,6 +18,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Nullable;
+import java.net.URI;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -57,7 +61,7 @@ public class AuthController {
             value = "/oauth2",
             produces = "application/json"
     )
-    public ResponseEntity<Map<String, String>> oAuthentication(
+    public ResponseEntity<?> oAuthentication(
             @Nullable @RequestHeader (name="Authorization") String token,
             @RequestParam("client_id") String clientID, @RequestParam("redirect_uri") String redirect_uri)
     {
@@ -86,13 +90,8 @@ public class AuthController {
                     .build();
         }
 
-        return ResponseBuilder
-                .create()
-                .issuedAt()
-                .tokenType("Bearer")
-                .accessToken(access_token.get().toString())
-                .okStatus()
-                .build();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(URI.create(redirect_uri));
+        return new ResponseEntity<>(headers, HttpStatus.MOVED_PERMANENTLY);
     }
-
 }
