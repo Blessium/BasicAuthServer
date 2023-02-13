@@ -6,12 +6,14 @@ import java.util.UUID;
 
 public class AccessToken {
     private UUID clientId;
+    private UUID requestId;
     private Instant issued_at;
     private Instant expires_at;
     private String username;
 
     public AccessToken(UUID clientId, TemporalAmount timeToExpire, String username) {
         this.clientId = clientId;
+        this.requestId = UUID.randomUUID();
         this.issued_at = Instant.now();
         this.expires_at = issued_at.plus(timeToExpire);
         this.username = username;
@@ -19,6 +21,10 @@ public class AccessToken {
 
     public UUID getClientId() {
         return clientId;
+    }
+
+    public UUID getRequestId() {
+        return requestId;
     }
 
     public void setClientId(UUID clientId) {
@@ -45,7 +51,7 @@ public class AccessToken {
         return issued_at.isAfter(expires_at);
     }
 
-    public boolean isEqual(String username, UUID clientId) {
-        return (this.username.equals(username) && this.clientId.equals(clientId) );
+    public boolean isEqual(UUID requestId, UUID clientId) {
+        return (this.requestId.equals(requestId) && this.clientId.equals(clientId) );
     }
 }

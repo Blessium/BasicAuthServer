@@ -1,15 +1,17 @@
 package io.exsuslabs.AuthorizationServer.requests;
 
-public class CredentialDeveloperRequest {
+public class AccessOAuthRequest {
     private String client_id;
     private String password;
+    private String request_id;
 
-    public CredentialDeveloperRequest() {
+    public AccessOAuthRequest() {
     }
 
-    public CredentialDeveloperRequest(String client_id, String passoword) {
+    public AccessOAuthRequest(String client_id, String password, String request_id) {
         this.client_id = client_id;
-        this.password = passoword;
+        this.password = password;
+        this.request_id = request_id;
     }
 
     public String getClient_id() {
@@ -26,5 +28,13 @@ public class CredentialDeveloperRequest {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getRequest_id() {
+        return request_id;
+    }
+
+    public void setRequest_id(String request_id) {
+        this.request_id = request_id;
     }
 }

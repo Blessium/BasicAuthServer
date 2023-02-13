@@ -28,6 +28,10 @@ public class DeveloperService {
         if (user.isEmpty()) {
             return Optional.of("could not create dev account");
         }
+        Optional<DeveloperDomain> check = developerRepository.findByUser(user.get());
+        if (check.isPresent()) {
+            return Optional.of("user is already developer");
+        }
         DeveloperDomain dev = new DeveloperDomain();
         dev.setUser(user.get());
         developerRepository.save(dev);
@@ -71,4 +75,5 @@ public class DeveloperService {
 
         return Optional.empty();
     }
+
 }

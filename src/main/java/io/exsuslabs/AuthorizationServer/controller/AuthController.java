@@ -1,6 +1,7 @@
 package io.exsuslabs.AuthorizationServer.controller;
 
-import com.sun.net.httpserver.HttpsServer;
+import io.exsuslabs.AuthorizationServer.domain.UserDomain;
+import io.exsuslabs.AuthorizationServer.requests.AccessOAuthRequest;
 import io.exsuslabs.AuthorizationServer.requests.CredentialUserRequest;
 import io.exsuslabs.AuthorizationServer.service.AuthenticationService;
 import io.exsuslabs.AuthorizationServer.service.AuthorizationService;
@@ -81,17 +82,57 @@ public class AuthController {
             return ResponseBuilder.create().errorMessage(error.get()).forbiddenStatus().build();
         }
 
-        Optional<UUID> access_token = oAuthService.generateRequest(token, clientID);
-        if (access_token.isEmpty()) {
+        Optional<UUID> request = oAuthService.generateRequest(token, clientID);
+        if (request.isEmpty()) {
             return ResponseBuilder
                     .create()
                     .errorMessage("could not generate the access token")
                     .forbiddenStatus()
                     .build();
         }
-
+        System.out.println(request.get());
         HttpHeaders headers = new HttpHeaders();
         headers.setLocation(URI.create(redirect_uri));
         return new ResponseEntity<>(headers, HttpStatus.MOVED_PERMANENTLY);
+    }
+
+    @PostMapping(
+            value="/oauth2",
+            produces = "application/json"
+    )
+    public ResponseEntity<?> checkOAuth2Request(@Validated @RequestBody AccessOAuthRequest accessOAuthRequest, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return ResponseBuilder
+                    .create()
+                    .errorMessage(Objects.requireNonNull(bindingResult.getFieldError()).getDefaultMessage())
+                    .badRequestStatus()
+                    .build();
+        }
+
+        Optional<String> error;
+        error = authenticationService.validateDeveloperCredentials(accessOAuthRequest.getClient_id(), accessOAuthRequest.getPassword());
+        if (error.isPresent()) {
+            return ResponseBuilder
+                    .create()
+                    .errorMessage(error.get())
+                    .forbiddenStatus()
+                    .build();
+        }
+
+        Optional<Map<String, String>> user = oAuthService.checkRequest(accessOAuthRequest.getClient_id(), accessOAuthRequest.getRequest_id());
+        if (user.isEmpty()) {
+            return ResponseBuilder
+                    .create()
+                    .errorMessage("the request is expired or is not valid")
+                    .forbiddenStatus()
+                    .build();
+        }
+
+        return ResponseBuilder
+                .create()
+                .userInfo(user.get())
+                .okStatus()
+                .build();
+
     }
 }

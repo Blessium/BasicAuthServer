@@ -4,6 +4,7 @@ import io.exsuslabs.AuthorizationServer.domain.UserDomain;
 import io.exsuslabs.AuthorizationServer.jwt.JWTService;
 import io.exsuslabs.AuthorizationServer.repository.UserRepository;
 import io.exsuslabs.AuthorizationServer.utils.AccessToken;
+import io.exsuslabs.AuthorizationServer.utils.Convertions;
 import io.exsuslabs.AuthorizationServer.utils.ValidityThread;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,18 +33,22 @@ public class OAuthService {
             return Optional.empty();
         }
         UserDomain user = userDomain.get();
-        UUID accessToken = UUID.randomUUID();
-        AccessToken temp_token = new AccessToken(UUID.fromString(clientID), Duration.ofMinutes(10), user.getUsername());
-        requests.add(temp_token);
-        return Optional.of(accessToken);
+        AccessToken accessToken = new AccessToken(UUID.fromString(clientID), Duration.ofMinutes(10), user.getUsername());
+        requests.add(accessToken);
+        return Optional.of(accessToken.getRequestId());
     }
 
-    public Optional<UserDomain> validateRequest(String access_token, UUID clientID) {
-        String username = JWTService.extractUsername(access_token.split(" ")[1]);
-        for (AccessToken token : requests) {
-            if (token.isEqual(username, clientID)) {
-
-            }
+    public Optional<Map<String, String>> checkRequest(String clientId, String requestId) {
+        for (AccessToken request: requests) {
+           if (request.isEqual(UUID.fromString(requestId), UUID.fromString(clientId))) {
+               Optional<UserDomain> user = userRepository.findById(request.getUsername());
+               Map<String, String> userInfo = user.map(Convertions::convertUserToMap).orElse(null);
+               if (Objects.isNull(userInfo)) {
+                   return Optional.empty();
+               }
+               requests.remove(request);
+               return Optional.of(userInfo);
+           }
         }
         return Optional.empty();
     }

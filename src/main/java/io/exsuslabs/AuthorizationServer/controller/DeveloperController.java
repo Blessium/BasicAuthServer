@@ -50,7 +50,14 @@ public class DeveloperController {
                     .build();
         }
 
-        developerService.enableDevAccount(token);
+        error = developerService.enableDevAccount(token);
+        if (error.isPresent()) {
+            return ResponseBuilder
+                    .create()
+                    .errorMessage(error.get())
+                    .badRequestStatus()
+                    .build();
+        }
 
         return ResponseBuilder
                 .create()
@@ -60,7 +67,7 @@ public class DeveloperController {
     }
 
     @PutMapping(
-            value = "/dev",
+            value = "/dev/me",
             consumes = "application/json",
             produces = "application/json"
     )
